@@ -1,0 +1,35 @@
+name: Build Windows Installer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Runtime that Windows 7 / 8 PCs may be missing. The installer bundles it
+      # and installs it silently only when needed. Build still works if this fails.
+      - name: Download C++ runtime for the installer
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          New-Item -ItemType Directory -Force build/redist | Out-Null
+          Invoke-WebRequest -Uri https://aka.ms/vs/16/release/vc_redist.x64.exe -OutFile build/redist/vc_redist.x64.exe
+          Invoke-WebRequest -Uri https://aka.ms/vs/16/release/vc_redist.x86.exe -OutFile build/redist/vc_redist.x86.exe
+
+      - run: npm install
+
+      - name: Build installer
+        shell: bash
+        run: npm run build || npm run build -- -c.win.signAndEditExecutable=false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MoiTracker-Setup
+          path: dist/MoiTracker-Setup.exe
