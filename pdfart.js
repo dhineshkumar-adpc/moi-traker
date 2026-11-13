@@ -98,59 +98,139 @@ function frame(f,grp,TH){
 }
 
 /* ---------- cover illustrations (viewBox 0 0 120 90) ---------- */
-const face=(x,y,r,skin)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${skin||SK}"/><circle cx="${R(x-r*.36)}" cy="${R(y+r*.05)}" r="${R(r*.09)}" fill="#2b1b17"/><circle cx="${R(x+r*.36)}" cy="${R(y+r*.05)}" r="${R(r*.09)}" fill="#2b1b17"/><path d="M${R(x-r*.3)} ${R(y+r*.38)}Q${x} ${R(y+r*.7)} ${R(x+r*.3)} ${R(y+r*.38)}" fill="none" stroke="#8a3b2a" stroke-width=".7" stroke-linecap="round"/><circle cx="${R(x-r*.58)}" cy="${R(y+r*.32)}" r="${R(r*.17)}" fill="#f28b82" opacity=".55"/><circle cx="${R(x+r*.58)}" cy="${R(y+r*.32)}" r="${R(r*.17)}" fill="#f28b82" opacity=".55"/>`;
-const ground=(c)=>`<ellipse cx="60" cy="83" rx="50" ry="5" fill="${c||'#000'}" opacity=".12"/>`;
-const petals=()=>[[20,84],[34,86],[46,85],[74,86],[88,84],[100,86],[58,87]].map(([x,y],i)=>`<ellipse cx="${x}" cy="${y}" rx="1.6" ry=".9" fill="${i%2?'#f9a8d4':'#fb7185'}" transform="rotate(${i*30} ${x} ${y})"/>`).join('');
-function arch(TH,flower){
-  const g=TH.g,m=TH.m;
-  let s=`<path d="M14 84V30Q60 -6 106 30V84" fill="none" stroke="${g}" stroke-width="3.4"/><path d="M14 84V30Q60 -6 106 30V84" fill="none" stroke="${m}" stroke-width="1" stroke-dasharray="2 2"/>`;
-  for(let i=0;i<9;i++){const t=i/8,x=14+92*t,y=30-(Math.sin(Math.PI*t))*26+(t<.1||t>.9?0:0);s+=flower(x,R(y+1),3.2,i)}
-  [26,40,80,94].forEach(x=>{const y=30-Math.sin(Math.PI*(x-14)/92)*25;s+=`<path d="M${x} ${R(y+3)}V${R(y+14+(x%7))}" stroke="#fff" stroke-width="1.3" stroke-dasharray="1.1 .9" opacity=".9"/>`});
+/* ---------- shared gradients (referenced by every illustration) ---------- */
+const DEFS=`<linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#e8b730"/><stop offset="1" stop-color="#a8740f"/></linearGradient>
+<radialGradient id="gSkin" cx=".4" cy=".3" r=".85"><stop offset="0" stop-color="#ffdcb8"/><stop offset=".6" stop-color="#f1bb8e"/><stop offset="1" stop-color="#d89868"/></radialGradient>
+<linearGradient id="gRed" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ee2c44"/><stop offset=".55" stop-color="#bf1530"/><stop offset="1" stop-color="#7d0b20"/></linearGradient>
+<linearGradient id="gMar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b01c47"/><stop offset="1" stop-color="#5e0c25"/></linearGradient>
+<linearGradient id="gCream" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffdf4"/><stop offset=".6" stop-color="#f8e9bd"/><stop offset="1" stop-color="#e6cf92"/></linearGradient>
+<linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19a574"/><stop offset="1" stop-color="#0a5d44"/></linearGradient>
+<linearGradient id="gNavy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34497a"/><stop offset="1" stop-color="#111b34"/></linearGradient>
+<linearGradient id="gWhite" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f0f1f8"/><stop offset="1" stop-color="#cfd3e4"/></linearGradient>
+<linearGradient id="gHair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3a34"/><stop offset=".4" stop-color="#1b100c"/><stop offset="1" stop-color="#070403"/></linearGradient>
+<linearGradient id="gGrey" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9bcc8"/></linearGradient>
+<linearGradient id="gBrown" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5a3a"/><stop offset="1" stop-color="#3b2214"/></linearGradient>
+<radialGradient id="gBlush"><stop offset="0" stop-color="#ff7a85" stop-opacity=".6"/><stop offset="1" stop-color="#ff7a85" stop-opacity="0"/></radialGradient>
+<radialGradient id="gGlow"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>`;
+
+/* ---------- face (shaded skin, eyes with highlights, brows, nose, smile with teeth) ---------- */
+function face(x,y,r,skin){
+  let s=`<ellipse cx="${R(x-r*.98)}" cy="${R(y+r*.12)}" rx="${R(r*.16)}" ry="${R(r*.23)}" fill="url(#gSkin)"/><ellipse cx="${R(x+r*.98)}" cy="${R(y+r*.12)}" rx="${R(r*.16)}" ry="${R(r*.23)}" fill="url(#gSkin)"/>`+
+  `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${R(r*1.03)}" fill="url(#gSkin)"/>`+
+  `<ellipse cx="${R(x-r*.58)}" cy="${R(y+r*.42)}" rx="${R(r*.3)}" ry="${R(r*.2)}" fill="url(#gBlush)"/><ellipse cx="${R(x+r*.58)}" cy="${R(y+r*.42)}" rx="${R(r*.3)}" ry="${R(r*.2)}" fill="url(#gBlush)"/>`;
+  [-1,1].forEach(d=>{
+    const ex=R(x+d*r*.38),ey=R(y+r*.05);
+    s+=`<ellipse cx="${ex}" cy="${ey}" rx="${R(r*.2)}" ry="${R(r*.235)}" fill="#fff"/><circle cx="${R(ex+d*r*.01)}" cy="${R(ey+r*.02)}" r="${R(r*.15)}" fill="#5a331f"/><circle cx="${R(ex+d*r*.01)}" cy="${R(ey+r*.02)}" r="${R(r*.085)}" fill="#0d0705"/><circle cx="${R(ex-r*.05)}" cy="${R(ey-r*.06)}" r="${R(r*.055)}" fill="#fff"/><circle cx="${R(ex+r*.05)}" cy="${R(ey+r*.07)}" r="${R(r*.025)}" fill="#fff" opacity=".8"/>`+
+    `<path d="M${R(ex-r*.22)} ${R(ey-r*.04)}Q${ex} ${R(ey-r*.36)} ${R(ex+r*.22)} ${R(ey-r*.04)}" fill="none" stroke="#1d0f0a" stroke-width="${R(r*.075)}" stroke-linecap="round"/><path d="M${R(ex+d*r*.2)} ${R(ey-r*.06)}l${R(d*r*.1)} ${R(-r*.07)}" stroke="#1d0f0a" stroke-width="${R(r*.05)}" stroke-linecap="round"/>`+
+    `<path d="M${R(x+d*r*.18)} ${R(y-r*.3)}Q${R(x+d*r*.4)} ${R(y-r*.46)} ${R(x+d*r*.64)} ${R(y-r*.3)}" fill="none" stroke="#24120c" stroke-width="${R(r*.085)}" stroke-linecap="round"/>`;
+  });
+  s+=`<path d="M${R(x-r*.05)} ${R(y+r*.22)}Q${R(x+r*.1)} ${R(y+r*.3)} ${R(x-r*.02)} ${R(y+r*.34)}" fill="none" stroke="#b5724e" stroke-width="${R(r*.06)}" stroke-linecap="round" opacity=".8"/>`+
+  `<path d="M${R(x-r*.3)} ${R(y+r*.46)}Q${x} ${R(y+r*.86)} ${R(x+r*.3)} ${R(y+r*.46)}Q${x} ${R(y+r*.54)} ${R(x-r*.3)} ${R(y+r*.46)}Z" fill="#b13a30" stroke="#7d241d" stroke-width="${R(r*.03)}"/><path d="M${R(x-r*.24)} ${R(y+r*.485)}Q${x} ${R(y+r*.57)} ${R(x+r*.24)} ${R(y+r*.485)}Q${x} ${R(y+r*.64)} ${R(x-r*.24)} ${R(y+r*.485)}Z" fill="#fff"/>`;
   return s;
 }
-const flR=(x,y,r,i)=>rose(x,y,r,i%2?'#fb7185':'#e11d48',i%2?'#be123c':'#9f1239');
-const flM=(x,y,r)=>marigold(x,y,r);
-const flL=(x,y,r)=>lily(x,y,r*1.15);
-const garland=(x,y,rx,ry,c)=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="none" stroke="${c||'#e11d48'}" stroke-width="1.9" stroke-dasharray="1.2 .8" stroke-linecap="round"/>`;
-
-function groomInd(x,y,old){
-  return `<path d="M${x-11} ${y-27}h22l3.5 27h-29z" fill="#fff8e6" stroke="#d9b45a" stroke-width=".6"/><rect x="${x-14.5}" y="${y-4}" width="29" height="4" fill="#c9972e"/><path d="M${x-8} ${y-27}l-1 27M${x+8} ${y-27}l1 27" stroke="#ecd9a6" stroke-width=".5"/>`+
-  `<path d="M${x-10.5} ${y-49}q10.5-4 21 0l1.6 24h-24.2z" fill="#fff1c4" stroke="#d9b45a" stroke-width=".5"/><path d="M${x-10.5} ${y-49}l6-1.2l13 25l-6.5 1.2z" fill="#8a1538"/>`+
-  `<rect x="${x-14.5}" y="${y-48}" width="5.2" height="19" rx="2.6" fill="#fff1c4" stroke="#d9b45a" stroke-width=".4"/><rect x="${x+9.3}" y="${y-48}" width="5.2" height="19" rx="2.6" fill="#fff1c4" stroke="#d9b45a" stroke-width=".4"/><circle cx="${x-12}" cy="${y-28}" r="2.6" fill="${SK}"/><circle cx="${x+12}" cy="${y-28}" r="2.6" fill="${SK}"/>`+
-  `<rect x="${x-3}" y="${y-53}" width="6" height="5" fill="${SK2}"/>`+face(x,y-60,9)+
-  `<path d="M${x-9.4} ${y-61}a9.4 9.4 0 0 1 18.8 0q-4-5-9.4-5.2q-5.400 .2-9.400 5.200z" fill="${old?'#cfcfd6':HAIR}"/>`+(old?`<path d="M${x-4} ${y-55.5}q4 2.4 8 0" stroke="#cfcfd6" stroke-width="1.6" fill="none" stroke-linecap="round"/>`:`<path d="M${x-3.5} ${y-55.5}q3.500 1.600 7 0" stroke="${HAIR}" stroke-width="1.1" fill="none"/>`)+
-  `<circle cx="${x}" cy="${y-64.200}" r=".9" fill="#c1121f"/>`+garland(x,y-47,10.8,4.6);
+const ground=(c)=>`<ellipse cx="60" cy="83" rx="52" ry="5.500" fill="#000" opacity=".16"/>`;
+const petals=()=>[[16,85],[28,87],[40,86],[80,87],[92,85],[104,86],[56,88],[66,88]].map(([x,y],i)=>`<ellipse cx="${x}" cy="${y}" rx="1.700" ry=".95" fill="${i%2?'#f9a8d4':'#fb7185'}" transform="rotate(${i*33} ${x} ${y})"/>`).join('');
+/* hanging flower garland (V shape) from shoulder to shoulder */
+function garlandV(x1,y1,x2,y2,drop,cols,n,r){
+  const cx=(x1+x2)/2,cy=(y1+y2)/2+drop*2;
+  let s=`<path d="M${x1} ${y1}Q${cx} ${cy} ${x2} ${y2}" fill="none" stroke="#2f7d4f" stroke-width="1.8" stroke-linecap="round"/>`;
+  for(let i=0;i<=n;i++){
+    const t=i/n,px=(1-t)*(1-t)*x1+2*(1-t)*t*cx+t*t*x2,py=(1-t)*(1-t)*y1+2*(1-t)*t*cy+t*t*y2,c=cols[i%cols.length];
+    s+=leaf(R(px),R(py),r*1.9,(i%2?35:-35)+90,GR2)+(c==='j'?jasmine(R(px),R(py),r*.95):rose(R(px),R(py),r,c[0],c[1]));
+  }
+  const bx=R((x1+x2)/2),by=R((y1+y2)/2+drop);
+  return s+`<path d="M${bx} ${R(by+r)}v${R(r*2.6)}" stroke="#2f7d4f" stroke-width=".9"/>`+rose(bx,R(by+r*3.6),r*1.15,'#e11d48','#9f1239')+leaf(bx,R(by+r*4.2),r*2,100)+leaf(bx,R(by+r*4.2),r*2,80);
 }
-function brideInd(x,y,old){
-  return `<path d="M${x-13} ${y-44}q13-5 26 0l7 44h-40z" fill="#c1121f"/><path d="M${x-13} ${y-44}q13-5 26 0l-3 33q-12-8-24-17z" fill="#8a1538" opacity=".85"/><rect x="${x-20}" y="${y-4}" width="40" height="4" fill="#e3b341"/><path d="M${x-15} ${y-20}l30 0" stroke="#e3b341" stroke-width=".8" stroke-dasharray="2 1.2"/>`+
-  `<path d="M${x-9} ${y-46}q9-3 18 0l.8 6q-9.800 3-19.600 0z" fill="#e3b341"/>`+
-  `<rect x="${x-13.5}" y="${y-47}" width="4.800" height="17" rx="2.4" fill="#c1121f"/><rect x="${x+8.700}" y="${y-47}" width="4.800" height="17" rx="2.4" fill="#c1121f"/><circle cx="${x-11.100}" cy="${y-30}" r="2.500" fill="${SK}"/><circle cx="${x+11.100}" cy="${y-30}" r="2.500" fill="${SK}"/>`+
-  `<rect x="${x-2.800}" y="${y-52}" width="5.600" height="5" fill="${SK2}"/><path d="M${x-8.200} ${y-61}a8.800 8.800 0 0 1 17.600 0v4.500q-8.800-2-17.600 0z" fill="${old?'#cfcfd6':HAIR}"/><circle cx="${x+9.200}" cy="${y-62}" r="3.600" fill="${old?'#cfcfd6':HAIR}"/>`+face(x,y-58,8.2)+
-  `<path d="M${x-8.400} ${y-62}q8.400-6.600 16.800 0q-8.400-3-16.800 0z" fill="${old?'#cfcfd6':HAIR}"/>`+[-8,-5.500,-3,5,7.500,10].map((d,i)=>`<circle cx="${R(x+d*.95+(d>0?2.500:-.5))}" cy="${R(y-66+Math.abs(d)*.35)}" r="1.150" fill="#fff"/>`).join('')+
-  `<circle cx="${x}" cy="${y-61.500}" r=".95" fill="#c1121f"/><circle cx="${x-8.400}" cy="${y-54}" r="1.100" fill="#e3b341"/><circle cx="${x+8.400}" cy="${y-54}" r="1.100" fill="#e3b341"/>`+garland(x,y-45.500,10.200,4.400,'#f43f5e')+`<path d="M${x-6} ${y-48.500}q6 4.500 12 0" fill="none" stroke="#e3b341" stroke-width=".8"/>`;
+const RC=[['#e11d48','#9f1239'],['#fb7185','#be123c']],RJ=[['#fb7185','#be123c'],'j','j'];
+/* hand / sleeve helper */
+const limb=(d,w,c,out)=>`<path d="${d}" fill="none" stroke="${out||'rgba(0,0,0,.18)'}" stroke-width="${w+.9}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+const hand=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#gSkin)" stroke="rgba(0,0,0,.15)" stroke-width=".35"/>`;
+/* ---- groom (Indian silk) ---- */
+function groomHair(x,hy,fill){return `<path d="M${x-10.6} ${hy-.5}C${x-11.4} ${hy-9.5} ${x-4} ${hy-14} ${x+1} ${hy-13.2}C${x+8} ${hy-13.6} ${x+11.6} ${hy-7.5} ${x+10.6} ${hy-.5}C${x+9.4} ${hy-4.6} ${x+6} ${hy-7.6} ${x+1} ${hy-8}C${x-3.600} ${hy-8.400} ${x-8.200} ${hy-6.200} ${x-10.600} ${hy-.500}Z" fill="${fill}"/><path d="M${x-6} ${hy-10.500}Q${x} ${hy-13.500} ${x+6} ${hy-11}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".9" stroke-linecap="round"/>`}
+function groomInd(x,old){
+  const hy=34,hf=old?'url(#gGrey)':'url(#gHair)';
+  return `<ellipse cx="${x}" cy="82" rx="16" ry="2.200" fill="#000" opacity=".18"/>`+
+  `<path d="M${x-12} 62H${x+12}L${x+15} 80H${x-15}Z" fill="url(#gCream)" stroke="#caa24a" stroke-width=".6"/><path d="M${x-5} 62L${x-6} 80M${x} 62V80M${x+5} 62L${x+6} 80" stroke="#e1cf9c" stroke-width=".5"/><path d="M${x-15} 80H${x+15}V76.500H${x-15}Z" fill="url(#gGold)"/><path d="M${x-15} 78.200H${x+15}" stroke="#b81f2d" stroke-width=".7" stroke-dasharray="1.400 .9"/>`+
+  `<ellipse cx="${x-6}" cy="82" rx="4.600" ry="1.800" fill="url(#gBrown)"/><ellipse cx="${x+6}" cy="82" rx="4.600" ry="1.800" fill="url(#gBrown)"/>`+
+  `<rect x="${x-3.200}" y="42" width="6.400" height="7" rx="3" fill="url(#gSkin)"/>`+
+  `<path d="M${x-11.500} 47.500Q${x} 43.500 ${x+11.500} 47.500L${x+13.500} 71Q${x} 74 ${x-13.500} 71Z" fill="url(#gCream)" stroke="#caa24a" stroke-width=".6"/><path d="M${x-3.200} 46.500Q${x} 49.500 ${x+3.200} 46.500" fill="none" stroke="#d1a63e" stroke-width=".9"/><path d="M${x} 49V72" stroke="#d1a63e" stroke-width=".6"/>`+[53,58.500,64].map(y=>`<circle cx="${x+1.100}" cy="${y}" r=".9" fill="url(#gGold)"/>`).join('')+
+  limb(`M${x-10.500} 49.500Q${x-16.500} 57 ${x-14.500} 65`,6.600,'#f6e6b4')+limb(`M${x+10.500} 49.500Q${x+16.500} 57 ${x+14.500} 65`,6.600,'#f6e6b4')+
+  `<path d="M${x-16.800} 61.500Q${x-14.800} 63 ${x-12.300} 62" stroke="#d1a63e" stroke-width="1.200" fill="none"/><path d="M${x+16.800} 61.500Q${x+14.800} 63 ${x+12.300} 62" stroke="#d1a63e" stroke-width="1.200" fill="none"/>`+hand(x-14.200,66.500,2.600)+hand(x+14.200,66.500,2.600)+
+  `<path d="M${x-11.500} 47.500L${x-4.500} 46.500L${x+13} 67L${x+5} 70Z" fill="url(#gMar)"/><path d="M${x-11.500} 47.500L${x-4.500} 46.500L${x+13} 67" fill="none" stroke="url(#gGold)" stroke-width="1.100"/><path d="M${x+5} 70L${x+7} 76L${x+10.500} 69.500Z" fill="url(#gMar)"/><path d="M${x-8} 48Q${x-3} 54 ${x+4} 62" stroke="#fff" stroke-opacity=".18" stroke-width="1.200" fill="none"/>`+
+  garlandV(x-9,48.500,x+9,48.500,13.500,RC,9,1.900)+
+  face(x,hy,10)+groomHair(x,hy,hf)+
+  `<path d="M${x-3.600} ${hy+4.300}Q${x-1.800} ${hy+2.900} ${x} ${hy+3.900}Q${x+1.800} ${hy+2.900} ${x+3.600} ${hy+4.300}" fill="none" stroke="${old?'#cfd0da':'#1b100c'}" stroke-width="1.100" stroke-linecap="round"/>`+
+  `<path d="M${x} ${hy-8.200}v2.600" stroke="#fff" stroke-width="1" stroke-linecap="round"/><path d="M${x} ${hy-8}v2.300" stroke="#c1121f" stroke-width=".7" stroke-linecap="round"/>`;
 }
-function groomChr(x,y){
-  return `<path d="M${x-9} ${y-27}h8.500v27h-9zM${x+.5} ${y-27}h8.500v27h-9z" fill="#1f2a44"/><rect x="${x-10}" y="${y-2.500}" width="9.800" height="2.500" rx="1" fill="#111"/><rect x="${x+.200}" y="${y-2.500}" width="9.800" height="2.500" rx="1" fill="#111"/>`+
-  `<path d="M${x-11} ${y-49}q11-4 22 0l1.800 24h-25.600z" fill="#1f2a44"/><path d="M${x-4.500} ${y-49.500}l4.500 15 4.500-15z" fill="#fff"/><path d="M${x-4.500} ${y-49.500}l4.500 15-7-12zM${x+4.500} ${y-49.500}l-4.500 15 7-12z" fill="#16203a"/><path d="M${x-3} ${y-46.500}l3 1.800 3-1.800v3.600l-3-1.800-3 1.800z" fill="#c1121f"/>`+
-  `<rect x="${x-15}" y="${y-48}" width="5.400" height="19" rx="2.700" fill="#1f2a44"/><rect x="${x+9.600}" y="${y-48}" width="5.400" height="19" rx="2.700" fill="#1f2a44"/><circle cx="${x-12.300}" cy="${y-28}" r="2.600" fill="${SK}"/><circle cx="${x+12.300}" cy="${y-28}" r="2.600" fill="${SK}"/>`+
-  `<rect x="${x-3}" y="${y-53}" width="6" height="5" fill="${SK2}"/>`+face(x,y-60,9)+`<path d="M${x-9.500} ${y-61}a9.500 9.500 0 0 1 19 0q-5-6.500-10-5q-4-.8-9 5z" fill="#4a2f1f"/>`;
+/* ---- bride (kanjivaram saree, jewellery, jasmine) ---- */
+function brideInd(x,old){
+  const hy=34,hf=old?'url(#gGrey)':'url(#gHair)';
+  const jas=[...Array(8)].map((_,i)=>jasmine(R(x+8.4+Math.sin(i*.5)*1.200),R(hy-6+i*3.600),1.500)).join('');
+  return `<ellipse cx="${x}" cy="82" rx="18" ry="2.300" fill="#000" opacity=".18"/>`+
+  `<path d="M${x-10.500} ${hy-2}C${x-14} ${hy+10} ${x-13} 56 ${x-9.500} 64L${x+9.500} 64C${x+13} 56 ${x+14} ${hy+10} ${x+10.500} ${hy-2}Z" fill="${hf}"/>`+
+  `<path d="M${x-12.500} 62Q${x} 59.500 ${x+12.500} 62L${x+18} 80Q${x} 84 ${x-18} 80Z" fill="url(#gRed)" stroke="#6e0a1c" stroke-width=".4"/>`+
+  [-9,-5.500,-2,1.500,5,8.500].map(d=>`<path d="M${x+d*.7} 62L${x+d*1.3} 82" stroke="#ffd0d6" stroke-opacity=".28" stroke-width=".5"/>`).join('')+
+  `<path d="M${x-18} 80Q${x} 84 ${x+18} 80L${x+17.200} 75.500Q${x} 79.500 ${x-17.200} 75.500Z" fill="url(#gGold)"/><path d="M${x-17.600} 77.800Q${x} 81.800 ${x+17.600} 77.800" fill="none" stroke="#a3173a" stroke-width=".7" stroke-dasharray="1.300 .8"/>`+
+  `<ellipse cx="${x-6.500}" cy="82" rx="3.800" ry="1.500" fill="url(#gGold)"/><ellipse cx="${x+6.500}" cy="82" rx="3.800" ry="1.500" fill="url(#gGold)"/>`+
+  `<rect x="${x-3}" y="42" width="6" height="7" rx="3" fill="url(#gSkin)"/>`+
+  `<path d="M${x-10} 47.500Q${x} 44.500 ${x+10} 47.500L${x+9} 60.500Q${x} 62.500 ${x-9} 60.500Z" fill="url(#gSkin)"/>`+
+  `<path d="M${x-10.200} 47.500Q${x} 44.200 ${x+10.200} 47.500L${x+9.400} 55.500Q${x} 57.500 ${x-9.400} 55.500Z" fill="url(#gGreen)" stroke="#07442f" stroke-width=".3"/><path d="M${x-9.400} 55.500Q${x} 57.500 ${x+9.400} 55.500" fill="none" stroke="url(#gGold)" stroke-width="1"/>`+
+  limb(`M${x-9.500} 50Q${x-15} 57 ${x-12.500} 64`,4.200,'url(#gSkin)')+limb(`M${x+9.500} 50Q${x+15} 57 ${x+12.500} 64`,4.200,'url(#gSkin)')+
+  [0,1,2,3].map(i=>`<path d="M${R(x-14.600+i*.4)} ${R(61.200+i*1)}l2.800 .2" stroke="${i%2?'#d61f3a':'url(#gGold)'}" stroke-width=".9" stroke-linecap="round"/><path d="M${R(x+14.600-i*.4)} ${R(61.200+i*1)}l-2.800 .2" stroke="${i%2?'#d61f3a':'url(#gGold)'}" stroke-width=".9" stroke-linecap="round"/>`).join('')+hand(x-12.200,65.500,2.400)+hand(x+12.200,65.500,2.400)+
+  `<path d="M${x-10} 47.500L${x-3} 46.500L${x+11.500} 63L${x+3} 65.500Z" fill="url(#gRed)" stroke="#6e0a1c" stroke-width=".3"/><path d="M${x-10} 47.500L${x-3} 46.500L${x+11.500} 63" fill="none" stroke="url(#gGold)" stroke-width="1.100"/><path d="M${x-10} 47.500Q${x-17} 62 ${x-15.500} 76L${x-11} 72Q${x-10.500} 60 ${x-6} 52Z" fill="url(#gRed)" opacity=".92" stroke="#6e0a1c" stroke-width=".3"/><path d="M${x-15.500} 76L${x-11} 72" stroke="url(#gGold)" stroke-width="1.200"/>`+
+  `<path d="M${x-5.500} 47.200Q${x} 54.500 ${x+5.500} 47.200" fill="none" stroke="url(#gGold)" stroke-width=".9"/><path d="M${x-7} 48.200Q${x} 58 ${x+7} 48.200" fill="none" stroke="url(#gGold)" stroke-width=".7"/>`+[[-4,51.500],[0,54.500],[4,51.500]].map(([d,y])=>`<circle cx="${x+d}" cy="${y}" r=".9" fill="#d61f3a" stroke="#ffd24a" stroke-width=".3"/>`).join('')+
+  garlandV(x-8.500,49,x+8.500,49,13,RJ,9,1.800)+
+  `<ellipse cx="${x-10.200}" cy="${hy+5.500}" rx="1.200" ry="2.300" fill="url(#gGold)"/><ellipse cx="${x+10.200}" cy="${hy+5.500}" rx="1.200" ry="2.300" fill="url(#gGold)"/>`+
+  face(x,hy,9.800)+
+  `<path d="M${x-10.400} ${hy-.5}C${x-11.200} ${hy-9.500} ${x-4} ${hy-14} ${x} ${hy-13.500}C${x+4} ${hy-14} ${x+11.200} ${hy-9.500} ${x+10.400} ${hy-.5}C${x+9.500} ${hy-5} ${x+5} ${hy-8.200} ${x} ${hy-8.500}C${x-5} ${hy-8.200} ${x-9.500} ${hy-5} ${x-10.400} ${hy-.5}Z" fill="${hf}"/><path d="M${x} ${hy-13}V${hy-8.600}" stroke="#d2a24c" stroke-width=".6"/><path d="M${x} ${hy-8.600}L${x} ${hy-6.300}" stroke="url(#gGold)" stroke-width=".7"/><path d="M${x} ${hy-6}l-1 1.600 1 1.600 1-1.600z" fill="url(#gGold)"/>`+
+  `<circle cx="${x-8.500}" cy="${hy-9.500}" r="3.300" fill="${hf}"/>${rose(x-9,hy-10.500,2.300,'#e11d48','#9f1239')}${jas}`+
+  `<circle cx="${x}" cy="${hy-3.800}" r=".8" fill="#c1121f"/><circle cx="${x+1.900}" cy="${hy+3.100}" r=".5" fill="url(#gGold)"/>`;
 }
-function brideChr(x,y){
-  return `<path d="M${x-9} ${y-45}q9-3 18 0l3 12q14 6 18 33h-60q4-27 18-33z" fill="#fff" stroke="#d9dbe6" stroke-width=".6"/><path d="M${x-26} ${y-4}q26 6 52 0" fill="none" stroke="#e5e7f0" stroke-width=".8"/><path d="M${x-14} ${y-24}q14 5 28 0" fill="none" stroke="#e5e7f0" stroke-width=".6"/>`+
-  `<rect x="${x-3}" y="${y-52}" width="6" height="5" fill="${SK2}"/><path d="M${x-9} ${y-47}q-9 22 -11 40q-6 4-9 2q4-26 12-44z" fill="#fff" opacity=".55" stroke="#d9dbe6" stroke-width=".4"/>`+
-  `<path d="M${x-8.500} ${y-61}a8.800 8.800 0 0 1 17.600 0v6q-8.800-2-17.600 0z" fill="#6b3a1e"/>`+face(x,y-58,8.200)+`<path d="M${x-8.400} ${y-62}q8.400-6.600 16.800 0q-8.400-3-16.800 0z" fill="#6b3a1e"/>`+
-  `<rect x="${x-8}" y="${y-68}" width="16" height="2.200" rx="1.100" fill="#e3b341"/><path d="M${x-9} ${y-67}q-3 24 -2 52M${x+9} ${y-67}q3 24 2 52" fill="none" stroke="#e5e7f0" stroke-width=".6"/>`+
-  `<circle cx="${x-12}" cy="${y-30}" r="2.500" fill="${SK}"/>`+[0,1,2].map(i=>rose(x+3+i*3.200,y-30+(i%2)*2,2.600,i%2?'#fb7185':'#e11d48','#9f1239')).join('')+leaf(x+5,y-27,5,60)+leaf(x+9,y-27,5,110);
+/* ---- christian couple ---- */
+function groomChr(x){
+  const hy=34;
+  return `<ellipse cx="${x}" cy="82" rx="16" ry="2.200" fill="#000" opacity=".18"/><path d="M${x-10} 66H${x}V80H${x-10.500}ZM${x} 66H${x+10}L${x+10.500} 80H${x}Z" fill="url(#gNavy)"/><ellipse cx="${x-5.500}" cy="81.800" rx="5" ry="1.800" fill="#0b0b10"/><ellipse cx="${x+5.500}" cy="81.800" rx="5" ry="1.800" fill="#0b0b10"/>`+
+  `<rect x="${x-3.200}" y="42" width="6.400" height="7" rx="3" fill="url(#gSkin)"/><path d="M${x-12} 48Q${x} 44 ${x+12} 48L${x+13.500} 70Q${x} 74 ${x-13.500} 70Z" fill="url(#gNavy)"/><path d="M${x-4.600} 46.500L${x} 62L${x+4.600} 46.500Z" fill="#fff"/><path d="M${x-4.600} 46.500L${x-1} 66L${x-8} 52ZM${x+4.600} 46.500L${x+1} 66L${x+8} 52Z" fill="#0f1830"/><path d="M${x-2.700} 48.800l2.700 1.600 2.700-1.600v3.400l-2.700-1.600-2.700 1.600z" fill="#c1121f"/><path d="M${x} 54V66" stroke="#fff" stroke-width=".4"/>`+
+  limb(`M${x-11} 50Q${x-17} 58 ${x-15} 66`,6.600,'#18244a')+limb(`M${x+11} 50Q${x+17} 58 ${x+15} 66`,6.600,'#18244a')+hand(x-14.800,68,2.600)+hand(x+14.800,68,2.600)+
+  `<path d="M${x+5} 53.500l3.200 .4-.6 2.200-2.600-.3z" fill="#fff"/><path d="M${x+6.500} 52.500l1 -1.600 1 1.600" fill="#c1121f"/>`+
+  face(x,hy,10)+`<path d="M${x-10.800} ${hy-.5}C${x-11.600} ${hy-9.500} ${x-4} ${hy-14.200} ${x+1} ${hy-13.400}C${x+8} ${hy-13.800} ${x+11.800} ${hy-7.500} ${x+10.800} ${hy-.5}C${x+9.400} ${hy-4.600} ${x+6} ${hy-7.600} ${x+1} ${hy-8}C${x-3.600} ${hy-8.400} ${x-8.200} ${hy-6.200} ${x-10.800} ${hy-.5}Z" fill="url(#gBrown)"/>`;
+}
+function brideChr(x){
+  const hy=34;
+  return `<ellipse cx="${x}" cy="82" rx="22" ry="2.600" fill="#000" opacity=".18"/><path d="M${x-12} ${hy+6}C${x-17} 58 ${x-15} 70 ${x-18} 80L${x+18} 80C${x+15} 70 ${x+17} 58 ${x+12} ${hy+6}Z" fill="#f4f4fa" opacity=".78" stroke="#d5d8e6" stroke-width=".4"/>`+
+  `<path d="M${x-8} 49Q${x} 46 ${x+8} 49L${x+7} 60Q${x+22} 66 ${x+25} 82Q${x} 87 ${x-25} 82Q${x-22} 66 ${x-7} 60Z" fill="url(#gWhite)" stroke="#d5d8e6" stroke-width=".5"/><path d="M${x-7} 60Q${x} 62.500 ${x+7} 60" fill="none" stroke="#c9a227" stroke-width="1"/>`+
+  [-13,-7,0,7,13].map(d=>`<path d="M${x+d*.4} 62Q${x+d*1.2} 72 ${x+d*1.7} 83" stroke="#dfe2ee" stroke-width=".5" fill="none"/>`).join('')+
+  `<path d="M${x-24} 80Q${x} 86 ${x+24} 80" fill="none" stroke="#e3e6f2" stroke-width="1.200"/>`+
+  `<rect x="${x-3}" y="42" width="6" height="7" rx="3" fill="url(#gSkin)"/><path d="M${x-9} 48.500Q${x} 45.200 ${x+9} 48.500L${x+8.500} 53Q${x} 51 ${x-8.500} 53Z" fill="url(#gSkin)"/>`+
+  `<path d="M${x-6} 49.500Q${x} 53.500 ${x+6} 49.500" fill="none" stroke="#fff" stroke-width=".9"/>`+[-4,-1.500,1.500,4].map(d=>`<circle cx="${x+d}" cy="${R(51.600+Math.abs(d)*.15)}" r=".7" fill="#fff" stroke="#c9a227" stroke-width=".25"/>`).join('')+
+  limb(`M${x-9} 51Q${x-15} 58 ${x-9} 63`,4,'url(#gSkin)')+limb(`M${x+9} 51Q${x+15} 58 ${x+9} 63`,4,'url(#gSkin)')+hand(x-8,63.500,2.400)+hand(x+8,63.500,2.400)+
+  `<path d="M${x-6} 64.500l-3 6M${x+6} 64.500l3 6" stroke="#2f7d4f" stroke-width=".8"/>`+rose(x-3,66,3.100,'#fb7185','#be123c')+rose(x+3.200,66.500,3.100,'#e11d48','#9f1239')+rose(x,69.500,3.400,'#f9a8d4','#be185d')+leaf(x-6,68,6,150)+leaf(x+6,68,6,30)+
+  face(x,hy,9.800)+`<path d="M${x-10.400} ${hy-.5}C${x-11.200} ${hy-9.500} ${x-4} ${hy-14} ${x} ${hy-13.500}C${x+4} ${hy-14} ${x+11.200} ${hy-9.500} ${x+10.400} ${hy-.5}C${x+9.500} ${hy-5} ${x+5} ${hy-8.200} ${x} ${hy-8.500}C${x-5} ${hy-8.200} ${x-9.500} ${hy-5} ${x-10.400} ${hy-.5}Z" fill="url(#gBrown)"/><circle cx="${x}" cy="${hy-15}" r="3.500" fill="url(#gBrown)"/>`+
+  `<path d="M${x-9} ${hy-10}Q${x} ${hy-18.500} ${x+9} ${hy-10}" fill="none" stroke="url(#gGold)" stroke-width="1.100"/>`+[-6,-3,0,3,6].map(d=>`<circle cx="${x+d}" cy="${R(hy-12.800-Math.cos(d/6*1.2)*1.200)}" r=".8" fill="#fff"/>`).join('')+
+  `<circle cx="${x-10.200}" cy="${hy+5.500}" r="1" fill="#fff" stroke="#c9a227" stroke-width=".3"/><circle cx="${x+10.200}" cy="${hy+5.500}" r="1" fill="#fff" stroke="#c9a227" stroke-width=".3"/>`;
+}
+/* ---- mandap / floral arch ---- */
+function mandap(TH,chr){
+  let s='';
+  const pil=x=>`<rect x="${x-2.800}" y="22" width="5.600" height="60" rx="1" fill="${chr?'url(#gWhite)':'url(#gGold)'}" stroke="#9a6a14" stroke-width=".3"/>`+(chr?'':[...Array(14)].map((_,i)=>`<path d="M${x-2.800} ${24+i*4.100}l5.600 2.600" stroke="#b81f2d" stroke-width="1"/>`).join(''))+`<rect x="${x-4}" y="19.500" width="8" height="4" rx="1" fill="${chr?'url(#gWhite)':'url(#gGold)'}" stroke="#9a6a14" stroke-width=".3"/><rect x="${x-4.200}" y="79" width="8.400" height="4" rx="1" fill="${chr?'url(#gWhite)':'url(#gGold)'}" stroke="#9a6a14" stroke-width=".3"/>`;
+  s+=pil(17)+pil(103);
+  const P=t=>[(1-t)*(1-t)*19+2*(1-t)*t*60+t*t*101,(1-t)*(1-t)*24+2*(1-t)*t*-9+t*t*24];
+  s+=`<path d="M19 24Q60 -9 101 24" fill="none" stroke="${chr?'#5b8f4a':'url(#gGold)'}" stroke-width="3.800" stroke-linecap="round"/>`;
+  for(let i=0;i<=16;i++){const [px,py]=P(i/16);s+=leaf(R(px),R(py),5,i%2?60:-60,chr?'#5b8f4a':GR2)}
+  for(let i=0;i<=12;i++){const [px,py]=P(i/12);s+=chr?(i%2?lily(R(px),R(py),3):rose(R(px),R(py),2.600,'#fff','#d9dbe6')):rose(R(px),R(py),i%3===1?2.200:3,i%2?'#fb7185':'#e11d48',i%2?'#be123c':'#9f1239')}
+  [.12,.22,.34,.66,.78,.88].forEach((t,k)=>{const [px,py]=P(t),L=9+(k%3)*3;s+=`<path d="M${R(px)} ${R(py+2)}V${R(py+L)}" stroke="#fff" stroke-width="1.100" stroke-dasharray=".9 .7" stroke-linecap="round"/><circle cx="${R(px)}" cy="${R(py+L+1.300)}" r="1.200" fill="${chr?'#c9a227':'url(#gGold)'}"/>`});
+  s+=chr?'':`<path d="M60 4.500v-4" stroke="url(#gGold)" stroke-width=".8"/><circle cx="60" cy="1.600" r="1.700" fill="url(#gGold)"/>`;
+  return s;
 }
 function couple(TH,o){
   o=o||{};const chr=o.style==='chr',old=!!o.old;
-  let s=arch(TH,chr?flL:flR);
-  s+=ground(TH.m)+petals();
-  s+=chr?groomChr(42,82)+brideChr(78,82):groomInd(42,82,old)+brideInd(78,82,old);
-  s+=heart(60,30,5,'#f43f5e')+heart(52,22,3,'#fb7185')+heart(69,23,3.400,'#f9a8d4');
-  if(old)s+=`<circle cx="60" cy="14" r="7.500" fill="${TH.g}" stroke="${TH.m}" stroke-width=".8"/><text x="60" y="17.400" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="8.500" fill="${TH.m}">60</text>`;
+  let s=mandap(TH,chr)+ground()+petals();
+  s+=chr?groomChr(42)+brideChr(80):groomInd(44,old)+brideInd(78,old);
+  s+=heart(61,25,5.500,'#f43f5e')+heart(53,16,3.200,'#fb7185')+heart(69,15,3.600,'#f9a8d4')+star5(36,12,2,'#ffe08a')+star5(86,10,2,'#ffe08a');
+  if(old)s+=`<circle cx="60" cy="8" r="7.500" fill="url(#gGold)" stroke="${TH.m}" stroke-width=".8"/><text x="60" y="11" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="8.500" fill="${TH.m}">60</text>`;
   return s;
 }
+
 function rings(TH){
   return `<circle cx="60" cy="42" r="34" fill="${TH.s}" opacity=".7"/>`+
   `<circle cx="50" cy="46" r="16" fill="none" stroke="#e3b341" stroke-width="4.500"/><circle cx="50" cy="46" r="16" fill="none" stroke="#fff3c4" stroke-width="1" opacity=".8"/>`+
@@ -302,12 +382,32 @@ const MAP={h_wed:['couple'],c_wed:['couple',{style:'chr'}],g_engage:['rings'],g_
   h_manjal:['girl'],h_valai:['mother'],h_kadhu:['cradle'],h_peyar:['cradle'],h_kumba:['gopuram'],
   c_bapt:['church'],c_comm:['church'],c_house:['house','cross'],m_nikah:['mosque'],m_walima:['mosque'],m_aqiqa:['cradle','m'],m_sunnath:['cradle','m'],m_house:['house','crescent'],
   g_bday:['cake'],g_house:['house'],g_shop:['shop']};
+function polish(svg){   // flat colours of the older drawings -> shaded gradients
+  return svg.replace(/fill="#f0c39b"/g,'fill="url(#gSkin)"').replace(/fill="#e3b341"/g,'fill="url(#gGold)"').replace(/fill="#c9972e"/g,'fill="url(#gGold)"').replace(/fill="#c1121f"/g,'fill="url(#gRed)"').replace(/fill="#8a1538"/g,'fill="url(#gMar)"');
+}
+const PATH='M8 108V52Q8 8 65 8Q122 8 122 52V108Z',PATH2='M11 106V52Q11 11 65 11Q119 11 119 52V106Z';
+function bokeh(TH){
+  const pts=[[22,40,6],[104,36,5],[16,70,4],[112,66,6],[40,22,3],[92,20,4],[64,18,5],[28,96,3],[100,96,3],[55,30,2],[77,28,2.500]];
+  return pts.map(([x,y,r],i)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${i%3?'#fff':TH.g}" opacity="${i%3?.55:.4}"/>`).join('')+[[30,30],[96,50],[20,56],[110,24],[70,40]].map(([x,y],i)=>`<path d="M${x} ${y-3.200}Q${x} ${y} ${x+3.200} ${y}Q${x} ${y} ${x} ${y+3.200}Q${x} ${y} ${x-3.200} ${y}Q${x} ${y} ${x} ${y-3.200}Z" fill="#fff" opacity=".9"/>`).join('');
+}
 function art(f,grp,TH,couple){
-  let m=MAP[f.type];
-  if(!m&&f.type==='marriage')m=MAP.h_wed;
-  if(!m)m=couple?['couple']:[{gHindu:'kalasam',gChr:'church',gMus:'mosque',gGen:'kalasam'}[grp]||'kalasam'];
-  const fn=ART[m[0]],body=fn(TH,m[1]);
-  return `<svg class="art" viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
+  let inner;
+  if(f.cov){
+    inner=`<image href="${f.cov}" x="8" y="8" width="114" height="100" preserveAspectRatio="xMidYMid slice"/>`;
+  }else{
+    let m=MAP[f.type];
+    if(!m&&f.type==='marriage')m=MAP.h_wed;
+    if(!m)m=couple?['couple']:[{gHindu:'kalasam',gChr:'church',gMus:'mosque',gGen:'kalasam'}[grp]||'kalasam'];
+    inner=`<g transform="translate(9 17) scale(.94)">${polish(ART[m[0]](TH,m[1]))}</g>`;
+  }
+  const st=styleOf(f,grp);
+  const fl=(x,y,r)=>st==='rose'?rose(x,y,r,'#e11d48','#9f1239'):st==='lily'?lily(x,y,r):st==='lotus'?lotus(x,y,r*1.2):st==='arabesque'?star8(x,y,r*.8,TH.m,TH.g,.5):st==='star'||st==='balloon'?star5(x,y,r*1.1,TH.g):marigold(x,y,r);
+  return `<svg class="art" viewBox="0 0 130 116" xmlns="http://www.w3.org/2000/svg"><defs>${DEFS}<clipPath id="ac"><path d="${PATH}"/></clipPath><radialGradient id="gBgA" cx=".5" cy=".55" r=".75"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="${TH.s}"/><stop offset="1" stop-color="${TH.s}" stop-opacity=".7"/></radialGradient></defs>`+
+  `<ellipse cx="65" cy="112" rx="56" ry="3" fill="#000" opacity=".15"/><path d="${PATH}" fill="url(#gBgA)"/><g clip-path="url(#ac)">${bokeh(TH)}${inner}</g>`+
+  `<path d="${PATH}" fill="none" stroke="url(#gGold)" stroke-width="3.200"/><path d="${PATH}" fill="none" stroke="${TH.m}" stroke-width=".8"/><path d="${PATH2}" fill="none" stroke="${TH.g}" stroke-width=".6" stroke-dasharray="1.500 1.200"/>`+
+  `<rect x="3" y="105" width="124" height="6.500" rx="3.200" fill="url(#gGold)" stroke="${TH.m}" stroke-width=".6"/><path d="M8 108.200H122" stroke="${TH.m}" stroke-width=".7" stroke-dasharray="2 1.400"/>`+
+  `<path d="M65 7.500v-3" stroke="${TH.m}" stroke-width=".8"/>${leaf(65,5,9,-160,GR2)}${leaf(65,5,9,-20,GR2)}${fl(65,5,3.600)}`+
+  fl(8,100,5)+fl(122,100,5)+leaf(3,104,9,-140)+leaf(127,104,9,-40)+fl(15,106,3.200)+fl(115,106,3.200)+`</svg>`;
 }
 window.MoiArt={frame:frame,art:art,styleOf:styleOf,leaf:leaf,rose:rose,marigold:marigold,lily:lily,lotus:lotus};
 })();
