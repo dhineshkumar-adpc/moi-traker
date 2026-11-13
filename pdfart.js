@@ -393,7 +393,7 @@ function bokeh(TH){
 function art(f,grp,TH,couple){
   let inner;
   if(f.cov){
-    inner=`<image href="${f.cov}" x="8" y="8" width="114" height="100" preserveAspectRatio="xMidYMid slice"/>`;
+    inner=/^data:image\/(png|webp)/.test(f.cov)?`<ellipse cx="65" cy="100" rx="40" ry="3.800" fill="#000" opacity=".16"/><image href="${f.cov}" x="10" y="9" width="110" height="95" preserveAspectRatio="xMidYMax meet"/>`:`<image href="${f.cov}" x="8" y="8" width="114" height="100" preserveAspectRatio="xMidYMid slice"/>`;
   }else{
     let m=MAP[f.type];
     if(!m&&f.type==='marriage')m=MAP.h_wed;
