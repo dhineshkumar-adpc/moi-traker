@@ -100,6 +100,11 @@ ipcMain.handle('sync:folder',wrap(async()=>{
 }));
 ipcMain.handle('sync:off',wrap(()=>{syncPath='';writeCfg({path:''});return {ok:true}}));
 
+// ---------- picture library: pictures\<function-type>.png (bundled) + Documents\MoiTracker\pictures (your own, wins) ----------
+const MIME={'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp'};
+function readPics(dir,out){try{fs.readdirSync(dir).forEach(n=>{const e=path.extname(n).toLowerCase();if(!MIME[e])return;try{const b=fs.readFileSync(path.join(dir,n));if(b.length<8e6)out[path.basename(n,e)]='data:'+MIME[e]+';base64,'+b.toString('base64')}catch(x){}})}catch(x){}}
+ipcMain.handle('pics',()=>{const out={};readPics(path.join(__dirname,'pictures'),out);try{const u=path.join(docsDir(),'MoiTracker','pictures');fs.mkdirSync(u,{recursive:true});readPics(u,out)}catch(x){}return out});
+
 // ---------- PDF ----------
 // Render one HTML document to PDF (via a temp file, so big photos never hit URL-length limits)
 async function renderPDF(html,extra){
