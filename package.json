@@ -1,6 +1,6 @@
 {
   "name": "moi-tracker",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Moi Tracker - மொய் கணக்கு | Function moi and gift accounting software",
   "author": "Dhineshkumar Adpc Murugan Trader",
   "main": "main.js",
@@ -22,6 +22,7 @@
       "index.html",
       "pdfart.js",
       "icon.png",
+      "pictures/**/*",
       "node_modules/**/*"
     ],
     "extraMetadata": {
