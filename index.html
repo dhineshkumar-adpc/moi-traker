@@ -548,7 +548,7 @@ section:not(.inv){margin-bottom:6mm}section.s8{break-inside:avoid}
 @page inv{size:A4;margin:8mm}.inv{page:inv}
 .fr{position:relative;height:275mm;width:194mm;padding:18mm 15mm 23mm;display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;overflow:hidden;background:${TH.bg}}
 .fr>*{position:relative;z-index:2}.fr>svg.frs{position:absolute;left:0;top:0;width:100%;height:100%;z-index:0}
-.art{width:94mm;height:84mm;display:block;margin:0 auto}.art.sm{width:72mm;height:64mm}
+.art{width:94mm;height:84mm;display:block;margin:0 auto}.art.sm{width:92mm;height:82mm}
 .fr .lab{font-size:10.5pt;color:#667085}.fr .ty{font-size:12.5pt;color:${TH.g};margin-top:1.5mm}.fr .ttl{font-size:25pt;font-weight:700;color:${TH.m};line-height:1.25;margin-top:2mm}
 .pp{display:flex;justify-content:center;align-items:center;gap:11mm}.pc{width:60mm;height:60mm;border-radius:50%;border:2.5pt solid ${TH.g};padding:1.5mm;background:#fff;box-shadow:0 0 0 1.6mm ${TH.bg},0 0 0 2.4mm ${TH.g},0 0 0 3.6mm ${TH.m}}.pc img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
 .amp{font-size:26pt;color:${TH.g};font-weight:700}
@@ -600,7 +600,7 @@ td.a,th.a{text-align:right;white-space:nowrap}td.n{width:34px;color:#777}tr{brea
   const dt=[[t('fdateL'),f.date],[t('dTime'),f.time],[t('dVenue'),f.venue],...((mr||f.who)?[[t('dHost'),f.host]]:[])].filter(x=>x[1]);
   const cover=`<section class="inv"><div class="fr">${FRM}
 <div>${emb}<div class="lab">${t('rpt')}</div><div class="ttl">${esc(fn)}</div>${tnm&&tnm!==fn?`<div class="ty">${esc(tnm)}</div>`:''}</div>
-<div>${pic?ART:(ph||ART)}</div>
+<div>${ph}</div>
 <div><div class="bl">${t('blessH')}</div><div class="dv"></div><div class="bm">${esc(msg)}</div></div>
 ${names}
 <table class="dt">${dt.map(x=>`<tr><td class="l">${x[0]}</td><td><b>${esc(x[1])}</b></td></tr>`).join('')}</table>
