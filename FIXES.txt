@@ -1,0 +1,11 @@
+Moi Tracker 1.2.0 - what was fixed
+1. SYNC: done by the app itself (no browser file-handle). "Create sync folder" / "Open sync file" / "Open folder" / "Disconnect".
+   Remembered after restart, reconnects automatically, retries by itself if the drive/file comes back, atomic writes, never overwrites a non-Moi file.
+2. Function-details / other boxes not accepting typing: caused by Windows native confirm()/alert() -> replaced by in-app dialogs; focus is handed back after every window dialog.
+3. Function-details form: fixed width, no sideways scroll, buttons always visible.
+4. PDF: themed borders (rose, marigold, lotus, lily, arabesque, balloons, stars) + cover picture for every function type; photo frames; page also on last page.
+5. Layout: navy & gold design with sidebar (all functions unchanged).
+6. Other bugs: PDF errors now shown (file open in another program etc.), PNG photos no longer turn black, delete/edit guards,
+   backup flushed on exit + daily backup copies (30 days) in Documents\MoiTracker, single instance, Ctrl+C/V keep working.
+BUILD: push this folder to GitHub -> Actions -> "Build Windows Installer" -> download MoiTracker-Setup.exe
+       (or on your PC:  npm install  then  npm run build)
